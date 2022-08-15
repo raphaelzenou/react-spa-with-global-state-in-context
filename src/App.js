@@ -1,7 +1,18 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useContext } from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import { AppContext } from "./AppContext";
 
 function App() {
+  const { appData, appDispatch } = useContext(AppContext);
+
+  const handleClick = (e) => {
+    e.preventDefault();
+    appDispatch({
+      type: "plus",
+    });
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -17,6 +28,10 @@ function App() {
         >
           Learn React
         </a>
+
+        <button className="App-button" onClick={handleClick}>
+          {`Clicks: ${appData.clicks}`}
+        </button>
       </header>
     </div>
   );
