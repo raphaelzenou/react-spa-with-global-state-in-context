@@ -1,37 +1,78 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import styled, { css } from "styled-components";
-import logo from "./logo.svg";
 import { AppContext } from "./AppContext";
+import axios from "axios";
 
 function App() {
   const { appData, appDispatch } = useContext(AppContext);
+  const [inputText, setInputText] = useState("");
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
+    e.preventDefault();
+    console.log("inputText", inputText);
+
+    const ships = await getShips(inputText);
+    console.log(ships);
+    appDispatch({
+      type: "add-result",
+      payload: ships?.data?.results || [],
+    });
+  };
+
+  const handleAddToFleet = (e, shipToAdd) => {
     e.preventDefault();
     appDispatch({
-      type: "plus",
+      type: "add-ship",
+      payload: shipToAdd || {},
     });
+  };
+  const handleDelete = (e, index) => {
+    e.preventDefault();
+    appDispatch({
+      type: "delete-ship",
+      payload: index,
+    });
+  };
+
+  const handleOnChange = (text) => {
+    setInputText(text);
+  };
+
+  const getShips = async (text) => {
+    const results = await axios({
+      method: "get",
+      url: `https://swapi.dev/api/starships/?search=${text}`,
+    });
+    return results;
   };
 
   return (
     <Container className="App">
       <Header className="App-header">
-        <Logo src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <Link
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </Link>
-
+        <input
+          value={inputText}
+          type="text"
+          id="name"
+          onChange={(e) => handleOnChange(e.target.value)}
+        ></input>
         <Button primary className="App-button" onClick={handleClick}>
-          {`Clicks: ${appData.clicks}`}
+          {`Search`}
         </Button>
+        {appData.latestResult.map((ship) => (
+          <Button
+            onClick={(e) => handleAddToFleet(e, ship)}
+            key={`${ship.name}-${Math.trunc(Math.random() * 100)}`}
+          >
+            {ship.name}
+          </Button>
+        ))}
+
+        {appData.fleet.map((ship, index) => (
+          <>
+            <div key={ship.name}>{ship.name}</div>
+            <button onClick={(e) => handleDelete(e, index)}>delete</button>
+          </>
+        ))}
       </Header>
     </Container>
   );
@@ -53,9 +94,6 @@ const Button = styled.button`
     `};
 `;
 
-const Link = styled.a`
-  color: #61dafb;
-`;
 const Header = styled.header`
   background-color: #282c34;
   min-height: 100vh;
@@ -67,21 +105,6 @@ const Header = styled.header`
   color: white;
 `;
 
-const Logo = styled.img`
-  height: 40vmin;
-  pointer-events: none;
-  @media (prefers-reduced-motion: no-preference) {
-    animation: App-logo-spin infinite 20s linear;
-  }
-  @keyframes App-logo-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-`;
 const Container = styled.div`
   text-align: center;
 `;
